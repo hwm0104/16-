@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>16년생 홍우주의 기쁨</title>
+<style>
+:root{--yellow:#ffe34d;--red:#ff3030}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505;color:#eee;font-family:system-ui,-apple-system,sans-serif;touch-action:none}
+button,input{font:inherit}button{border:1px solid #777;background:#171717;color:#eee;border-radius:10px;padding:12px 16px;cursor:pointer}button:active{transform:scale(.98)}button:disabled{opacity:.4}
+#menu{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(ellipse,#282818 0,#090909 60%,#000 100%);text-align:center;padding:20px}
+#title{font-weight:1000;letter-spacing:.02em;font-size:clamp(28px,6vw,62px);color:var(--yellow);text-shadow:0 0 22px #ffe34d66;margin:0}
+#subtitle{color:#aaa;max-width:600px;line-height:1.6}.menuBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.mainbtn{min-width:155px;font-weight:800;font-size:18px}
+#lobby{display:none;position:absolute;z-index:11;inset:0;background:#090909;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:22px;text-align:center}
+#lobby h2{color:var(--red);font-size:clamp(25px,5vw,42px);margin:0}#lobby input{background:#181818;color:#fff;border:1px solid #666;border-radius:8px;padding:12px;width:min(280px,80vw);text-align:center}
+#game{display:none;position:absolute;inset:0;background:#070707}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#hud{position:absolute;inset:0;pointer-events:none;padding:12px;font-size:14px;text-shadow:0 2px 4px #000}
+#topline{display:flex;justify-content:space-between;gap:8px;align-items:start}#objective{background:#0009;padding:9px 11px;border-radius:8px;max-width:min(75vw,420px);line-height:1.5}
+#hint{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);background:#000b;border:1px solid #aaa;padding:10px 14px;border-radius:9px;display:none;text-align:center;white-space:nowrap}
+#notice{position:absolute;left:50%;top:18%;transform:translateX(-50%);font-size:clamp(18px,4vw,30px);font-weight:900;text-align:center;color:#fff;text-shadow:0 2px 8px #000}
+#touchControls{position:absolute;inset:0;pointer-events:none;display:none}
+.pad{position:absolute;bottom:22px;left:18px;display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:4px;pointer-events:auto}
+.pad button,.actions button{background:#111a;border-color:#aaa9;backdrop-filter:blur(4px);padding:0;font-weight:800}
+.pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+.actions{position:absolute;right:16px;bottom:24px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}.actions button{min-width:92px;min-height:46px}
+#scare{display:none;position:absolute;z-index:30;inset:0;background:#000;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center}
+#scare .face{font-size:min(48vw,300px);font-weight:1000;color:#080808;-webkit-text-stroke:2px #c00;text-shadow:0 0 35px red}
+#scare h1{font-size:clamp(28px,7vw,64px);color:#f22;margin:0}
+#end{display:none;position:absolute;z-index:20;inset:0;background:#000e;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:20px}
+#end h2{font-size:clamp(30px,7vw,64px);margin:0;color:var(--yellow)}
+.small{font-size:12px;color:#aaa}
+@media(max-width:700px){#touchControls{display:block}.pad{transform:scale(.9);transform-origin:bottom left}.actions{transform:scale(.92);transform-origin:bottom right}#objective{font-size:12px}}
+</style></head>
+<body>
+<div id="menu">
+<h1 id="title">16년생 홍우주의 기쁨</h1>
+<div id="subtitle">🎉 아주 신나는 음악이 흐른다. 뭔가 이상할 정도로…</div>
+<div class="menuBtns"><button id="question" class="mainbtn">?</button></div>
+<div class="small">모바일 · PC 호환 | 미로에서 열쇠와 비밀번호를 찾아 탈출하라</div>
+</div>
+<div id="lobby">
+<h2>16년생 홍우주의 분노</h2>
+<div id="lobbyText">어떤 방식으로 플레이할까?</div>
+<div class="menuBtns"><button id="singleBtn" class="mainbtn">싱글 플레이</button><button id="multiBtn" class="mainbtn">멀티 플레이</button></div>
+<div id="multiPanel" style="display:none;gap:10px;flex-direction:column;align-items:center">
+<button id="createRoom">방 만들기</button>
+<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"><input id="roomInput" maxlength="6" placeholder="방 번호 입력"><button id="joinRoom">참가</button></div>
+<div id="roomInfo"></div><div class="small">방 번호를 친구에게 알려 주세요. 온라인 멀티에는 서버 연결이 필요합니다.</div>
+</div>
+<button id="backBtn">뒤로</button>
+</div>
+<div id="game">
+<canvas id="view"></canvas>
+<div id="hud"><div id="topline"><div id="objective">목표: 열쇠 0/1 · 비밀번호 0/4</div><button id="exitGame" style="pointer-events:auto;padding:7px 10px">나가기</button></div><div id="notice"></div><div id="hint"></div></div>
+<div id="touchControls">
+<div class="pad"><button class="up" data-move="forward">▲</button><button class="left" data-move="left">◀</button><button class="down" data-move="back">▼</button><button class="right" data-move="right">▶</button></div>
+<div class="actions"><button id="mobileFlash">🔦 손전등</button><button id="mobileUse">열기 / 숨기</button></div>
+</div></div>
+<div id="scare"><div class="face">◉</div><h1>홍우주의 분노</h1><p>무언가가 너를 발견했다.</p><button id="scareRetry">다시 시작</button></div>
+<div id="end"><h2 id="endTitle">탈출 성공!</h2><p id="endText">미로에서 빠져나왔다.</p><button id="againBtn">다시 플레이</button><button id="menuBtn">메인 메뉴</button></div>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id);
+const menu=$('menu'), lobby=$('lobby'), game=$('game'), canvas=$('view'), ctx=canvas.getContext('2d');
+const title=$('title'), subtitle=$('subtitle'), objective=$('objective'), hint=$('hint'), notice=$('notice');
+let state='menu', mode='single', roomCode='', soundCtx=null, musicTimer=null, musicMode='happy', audioStarted=false;
+let map=[], mapW=25,mapH=25, player={x:1.5,y:1.5,a:0}, monster={x:22.5,y:22.5}, exitPos={x:23.5,y:23.5};
+let keyPos=null, drawers=[], digits=[], digitPositions=[], hasKey=false, codeFound=[false,false,false,false], code='', flashlight=true, hidden=false, hideSpot=null;
+let keys={}, touchMove={}, lastTime=0, scareCooldown=0, roomPoll=null, socket=null, remotePlayers={}, gameOver=false;
+const isMobile=()=>matchMedia('(max-width:700px)').matches || 'ontouchstart' in window;
+function audio(){if(!soundCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)soundCtx=new AC()} if(soundCtx?.state==='suspended')soundCtx.resume();audioStarted=true}
+function tone(freq,dur,type='sine',vol=.05,slide=0){if(!soundCtx)return;let o=soundCtx.createOscillator(),g=soundCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,soundCtx.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,freq+slide),soundCtx.currentTime+dur);g.gain.setValueAtTime(vol,soundCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,soundCtx.currentTime+dur);o.connect(g);g.connect(soundCtx.destination);o.start();o.stop(soundCtx.currentTime+dur)}
+function playHappy(){stopMusic();musicMode='happy';let n=0;musicTimer=setInterval(()=>{if(state!=='menu')return;let seq=[523,659,784,659,587,698,880,698];tone(seq[n++%seq.length],.16,'square',.025)},190)}
+function playScary(){stopMusic();musicMode='scary';let n=0;musicTimer=setInterval(()=>{if(state==='menu'||state==='lobby'||state==='game'){let seq=[78,83,65,110,73,58];tone(seq[n++%seq.length],.5,'sawtooth',.035, -15)}},420)}
+function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+function sfx(kind){audio();if(kind==='drawer'){tone(1000,.09,'sine',.06);setTimeout(()=>tone(1400,.15,'sine',.05),90)}else if(kind==='key'){tone(880,.13,'triangle',.07);setTimeout(()=>tone(1320,.2,'triangle',.06),120)}else if(kind==='scare'){tone(60,.8,'sawtooth',.22,700);setTimeout(()=>tone(45,.7,'square',.18,500),80)}else if(kind==='unlock'){[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle',.07),i*100))}else if(kind==='hide'){tone(180,.12,'triangle',.04)}}
+$('question').onclick=()=>{audio();title.textContent='16년생 홍우주의 분노';title.style.color='var(--red)';title.style.textShadow='0 0 22px #ff303066';subtitle.textContent='🎵 …왜 음악이 이상해졌지?';sfx('scare');playScary();menu.style.display='none';lobby.style.display='flex';};
+$('singleBtn').onclick=()=>{audio();mode='single';startGame()};
+$('multiBtn').onclick=()=>{$('multiPanel').style.display='flex';$('lobbyText').textContent='방을 만들거나 친구의 번호를 입력해.'};
+$('backBtn').onclick=()=>{lobby.style.display='none';menu.style.display='flex';playHappy()};
+$('createRoom').onclick=async()=>{audio();roomCode=String(Math.floor(100000+Math.random()*900000));$('roomInfo').textContent='방 번호: '+roomCode+' (친구에게 공유)';mode='multi';startGame();};
+$('joinRoom').onclick=()=>{const val=$('roomInput').value.trim();if(!/^\d{6}$/.test(val)){$('roomInfo').textContent='6자리 방 번호를 입력해 줘.';return}roomCode=val;mode='multi';startGame()};
+$('exitGame').onclick=()=>{stopGame();game.style.display='none';lobby.style.display='flex';state='lobby';playScary()};
+$('scareRetry').onclick=()=>startGame();
+$('againBtn').onclick=()=>startGame();
+$('menuBtn').onclick=()=>{stopGame();$('end').style.display='none';game.style.display='none';lobby.style.display='none';menu.style.display='flex';state='menu';title.textContent='16년생 홍우주의 기쁨';title.style.color='var(--yellow)';playHappy()};
+$('mobileFlash').onclick=()=>{flashlight=!flashlight;sfx('drawer')};
+$('mobileUse').onclick=useNearby;
+function resize(){canvas.width=Math.max(320,Math.floor(innerWidth*(devicePixelRatio||1)));canvas.height=Math.max(240,Math.floor(innerHeight*(devicePixelRatio||1)))}window.addEventListener('resize',resize);resize();
+function makeMaze(){
+ map=Array.from({length:mapH},()=>Array(mapW).fill(1));
+ // recursive backtracker over odd cells
+ let stack=[[1,1]];map[1][1]=0;
+ while(stack.length){let [x,y]=stack[stack.length-1],opts=[];for(let [dx,dy] of [[2,0],[-2,0],[0,2],[0,-2]]){let nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<mapW-1&&ny<mapH-1&&map[ny][nx]===1)opts.push([nx,ny,dx,dy])}
+ if(!opts.length){stack.pop();continue}let [nx,ny,dx,dy]=opts[Math.floor(Math.random()*opts.length)];map[y+dy/2][x+dx/2]=0;map[ny][nx]=0;stack.push([nx,ny])}
+ // add a few loops
+ for(let i=0;i<28;i++){let x=1+Math.floor(Math.random()*(mapW-2)),y=1+Math.floor(Math.random()*(mapH-2));if(map[y][x]===1&&((map[y][x-1]===0&&map[y][x+1]===0)||(map[y-1]?.[x]===0&&map[y+1]?.[x]===0)))map[y][x]=0}
+}
+function openCells(){let a=[];for(let y=1;y<mapH-1;y++)for(let x=1;x<mapW-1;x++)if(map[y][x]===0&&Math.abs(x-1)+Math.abs(y-1)>7)a.push({x:x+.5,y:y+.5});return a}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function startGame(){
+ audio();stopMusic();state='game';gameOver=false;hidden=false;hideSpot=null;hasKey=false;codeFound=[false,false,false,false];flashlight=true;keys={};touchMove={};remotePlayers={};
+ menu.style.display='none';lobby.style.display='none';$('scare').style.display='none';$('end').style.display='none';game.style.display='block';
+ makeMaze();player={x:1.5,y:1.5,a:0};let cells=openCells().filter(p=>dist(p,player)>13);if(cells.length<3)cells=openCells();
+ exitPos=cells.splice(Math.floor(Math.random()*cells.length),1)[0]||{x:mapW-2.5,y:mapH-2.5};
+ let far=cells.filter(p=>dist(p,player)>10);monster=far[Math.floor(Math.random()*far.length)]||{x:mapW-2.5,y:mapH-2.5};
+ keyPos=cells.splice(Math.floor(Math.random()*cells.length),1)[0]||{x:mapW-2.5,y:mapH-2.5};
+ drawers=[];for(let i=0;i<8;i++){let p=cells.splice(Math.floor(Math.random()*cells.length),1)[0];if(p)drawers.push({...p,hasKey:i===Math.floor(Math.random()*8),opened:false})}
+ // guarantee one key drawer
+ if(!drawers.some(d=>d.hasKey)&&drawers.length)drawers[Math.floor(Math.random()*drawers.length)].hasKey=true;
+ digits=[];digitPositions=[];code=String(Math.floor(1000+Math.random()*9000));for(let i=0;i<4;i++){let p=cells.splice(Math.floor(Math.random()*cells.length),1)[0];if(!p)p={x:3.5+i*2,y:3.5};digitPositions.push(p);digits.push({digit:code[i],...p,found:false})}
+ // hide spots in open cells
+ hideSpots=[];for(let i=0;i<Math.min(14,cells.length);i++){let p=cells.splice(Math.floor(Math.random()*cells.length),1)[0];if(p)hideSpots.push({...p,type:i%2?'bed':'wardrobe'})}
+ notice.textContent=mode==='multi'?'멀티 방 '+roomCode+' · 친구와 같은 번호를 공유해!':'살아서 탈출해.';setTimeout(()=>{if(state==='game')notice.textContent=''},3500);
+ objective.textContent='목표: 열쇠 0/1 · 비밀번호 0/4';lastTime=performance.now();requestAnimationFrame(loop);playScary();
+ if(mode==='multi') connectMultiplayer();
+}
+let hideSpots=[];
+function stopGame(){state='lobby';stopMusic();if(roomPoll)clearInterval(roomPoll);roomPoll=null;if(socket){try{socket.close()}catch(e){}socket=null}}
+function isWall(x,y){let ix=Math.floor(x),iy=Math.floor(y);return !map[iy]||map[iy][ix]!==0}
+function canMove(x,y){let r=.19;return !isWall(x-r,y-r)&&!isWall(x+r,y-r)&&!isWall(x-r,y+r)&&!isWall(x+r,y+r)}
+function move(dx,dy){if(hidden||gameOver)return;let nx=player.x+dx,ny=player.y+dy;if(canMove(nx,player.y))player.x=nx;if(canMove(player.x,ny))player.y=ny}
+function nearestThing(){let all=[];for(let d of drawers)if(!d.opened)all.push({type:'drawer',obj:d,d:dist(player,d)});for(let h of hideSpots)all.push({type:'hide',obj:h,d:dist(player,h)});all.push({type:'exit',obj:exitPos,d:dist(player,exitPos)});return all.sort((a,b)=>a.d-b.d)[0]}
+function useNearby(){if(state!=='game'||gameOver)return;if(hidden){hidden=false;sfx('hide');notice.textContent='장롱/침대에서 나왔다';setTimeout(()=>notice.textContent='',1300);return}
+ let n=nearestThing();if(!n||n.d>1.25){notice.textContent='가까이 상호작용할 것이 없어.';setTimeout(()=>notice.textContent='',1000);return}
+ if(n.type==='drawer'){n.obj.opened=true;sfx('drawer');if(n.obj.hasKey&&!hasKey){hasKey=true;sfx('key');notice.textContent='열쇠를 찾았다!';}else notice.textContent='서랍 안은 비어 있다.';updateObjective()}
+ else if(n.type==='hide'){hidden=true;hideSpot=n.obj;sfx('hide');notice.textContent='숨었다. 괴물이 지나가길 기다려.'}
+ else if(n.type==='exit'){if(hasKey&&codeFound.every(Boolean)){sfx('unlock');finish(true)}else{notice.textContent='탈출구가 잠겨 있다. 열쇠와 비밀번호 4자리를 찾아야 해.';setTimeout(()=>notice.textContent='',2000)}}
+}
+function updateObjective(){objective.textContent=`목표: 열쇠 ${hasKey?1:0}/1 · 비밀번호 ${codeFound.filter(Boolean).length}/4`}
+function finish(win){gameOver=true;stopMusic();$('end').style.display='flex';$('endTitle').textContent=win?'탈출 성공!':'잡혔다!';$('endTitle').style.color=win?'var(--yellow)':'var(--red)';$('endText').textContent=win?'16년생 홍우주의 미로에서 탈출했다.':'이번에는 탈출하지 못했다.';sfx(win?'unlock':'scare')}
+function loop(t){if(state!=='game')return;let dt=Math.min(.05,(t-lastTime)/1000||.016);lastTime=t;update(dt);render();requestAnimationFrame(loop)}
+function update(dt){
+ if(gameOver)return;
+ let speed=2.25*dt, forward=(keys.w||keys.ArrowUp||touchMove.forward?1:0)-(keys.s||keys.ArrowDown||touchMove.back?1:0), side=(keys.d||touchMove.right?1:0)-(keys.a||touchMove.left?1:0);
+ if(forward||side){let len=Math.hypot(forward,side)||1;forward/=len;side/=len;let dx=(Math.cos(player.a)*forward-Math.sin(player.a)*side)*speed,dy=(Math.sin(player.a)*forward+Math.cos(player.a)*side)*speed;move(dx,dy)}
+ if(keys.ArrowLeft)player.a-=dt*2.2;if(keys.ArrowRight)player.a+=dt*2.2;
+ // monster follows through maze-ish with wall-aware greedy movement
+ if(!hidden){let dx=player.x-monster.x,dy=player.y-monster.y,d=Math.hypot(dx,dy);if(d>0.001){let ms=.65*dt;if(d<7)ms=1.05*dt;let opts=[[dx/d,dy/d],[Math.sign(dx),0],[0,Math.sign(dy)]];for(let [vx,vy] of opts){let nx=monster.x+vx*ms,ny=monster.y+vy*ms;if(canMove(nx,ny)){monster.x=nx;monster.y=ny;break}}}
+ if(dist(player,monster)<.55&&scareCooldown<=0){scareCooldown=3;showScare()}}
+ if(scareCooldown>0)scareCooldown-=dt;
+ let n=nearestThing();if(n&&n.d<1.25){hint.style.display='block';hint.textContent=n.type==='drawer'?'E / 클릭: 서랍 열기':n.type==='hide'?'F / 가까이서 클릭: 숨기':'탈출구: E / 클릭'}else{hint.style.display='none'}
+ if(hidden)hint.textContent='숨는 중 · 버튼을 눌러 나오기';
+ // gather wall digits automatically on close approach
+ for(let i=0;i<digits.length;i++){let d=digits[i];if(!d.found&&dist(player,d)<.75){d.found=true;codeFound[i]=true;sfx('key');notice.textContent='벽에서 비밀번호 숫자 '+d.digit+' 을(를) 찾았다';setTimeout(()=>{if(state==='game')notice.textContent=''},1400);updateObjective()}}
+ if(mode==='multi')sendPosition();
+}
+function showScare(){gameOver=true;sfx('scare');$('scare').style.display='flex';setTimeout(()=>{if($('scare').style.display==='flex'){}},900)}
+function render(){
+ const w=canvas.width,h=canvas.height;ctx.fillStyle='#080808';ctx.fillRect(0,0,w,h);
+ // faux 3D raycaster
+ let cols=Math.max(180,Math.floor(w/3)),cw=w/cols;
+ for(let i=0;i<cols;i++){let cam=2*i/cols-1,ray=player.a+Math.atan(cam*.72),rx=Math.cos(ray),ry=Math.sin(ray),d=0,hit=0;
+ while(d<18){d+=.035;if(isWall(player.x+rx*d,player.y+ry*d)){hit=1;break}}
+ let corrected=d*Math.cos(Math.atan(cam*.72));let wallH=Math.min(h*1.4,h/(corrected+.001)*.82);let shade=Math.max(8,Math.floor(80/(1+corrected*.23)));let light=flashlight?Math.max(.12,1-corrected/10):Math.max(.04,.23-corrected/22);shade=Math.floor(shade*light);
+ ctx.fillStyle=`rgb(${shade},${shade},${shade})`;ctx.fillRect(i*cw,(h-wallH)/2,cw+1,wallH);
+ // ceiling and floor
+ ctx.fillStyle='#050505';ctx.fillRect(i*cw,0,cw+1,(h-wallH)/2);ctx.fillStyle='#101010';ctx.fillRect(i*cw,(h+wallH)/2,cw+1,h);
+ }
+ // objects projected as simple silhouettes
+ function sprite(pos,kind,color,size=1){let dx=pos.x-player.x,dy=pos.y-player.y,dist0=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)-player.a;while(ang>Math.PI)ang-=2*Math.PI;while(ang< -Math.PI)ang+=2*Math.PI;if(Math.abs(ang)>0.75||dist0<.1)return;let sx=w*(.5+Math.tan(ang)/1.45),sz=Math.min(h*.8,h/(dist0+.1)*size);if(sx<0||sx>w)return;ctx.save();ctx.translate(sx,h*.51);ctx.globalAlpha=Math.max(.15,1-dist0/19);
+ if(kind==='monster'){ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,-sz*.28,sz*.17,sz*.22,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-sz*.13,-sz*.1,sz*.26,sz*.52);ctx.strokeStyle='#050505';ctx.lineWidth=sz*.07;ctx.beginPath();ctx.moveTo(-sz*.07,sz*.35);ctx.lineTo(-sz*.23,sz*.62);ctx.moveTo(sz*.07,sz*.35);ctx.lineTo(sz*.23,sz*.62);ctx.stroke();ctx.fillStyle='#f00';ctx.fillRect(-sz*.075,-sz*.3,sz*.045,sz*.025);ctx.fillRect(sz*.03,-sz*.3,sz*.045,sz*.025)}
+ else if(kind==='key'){ctx.strokeStyle='#ffe34d';ctx.lineWidth=Math.max(2,sz*.05);ctx.beginPath();ctx.arc(0,-sz*.1,sz*.12,0,Math.PI*2);ctx.moveTo(sz*.1,-sz*.1);ctx.lineTo(sz*.34,-sz*.1);ctx.lineTo(sz*.34,0);ctx.stroke()}
+ else if(kind==='digit'){ctx.fillStyle='#d9d9d9';ctx.font=`bold ${Math.max(14,sz*.35)}px monospace`;ctx.textAlign='center';ctx.fillText(pos.digit,0,0)}
+ else if(kind==='exit'){ctx.strokeStyle='#e8e8e8';ctx.lineWidth=3;ctx.strokeRect(-sz*.22,-sz*.45,sz*.44,sz*.9);ctx.fillStyle='#7a1111';ctx.fillRect(-sz*.17,-sz*.4,sz*.34,sz*.8)}
+ else if(kind==='drawer'){ctx.fillStyle='#49331f';ctx.fillRect(-sz*.22,-sz*.22,sz*.44,sz*.42);ctx.strokeStyle='#a88';ctx.strokeRect(-sz*.22,-sz*.22,sz*.44,sz*.42)}
+ else if(kind==='hide'){ctx.fillStyle=pos.type==='bed'?'#4c3131':'#493c2b';ctx.fillRect(-sz*.25,-sz*.4,sz*.5,sz*.8);ctx.fillStyle='#aaa';ctx.fillRect(-sz*.2,-sz*.35,sz*.4,sz*.12)}
+ ctx.restore()}
+ // sort far to near
+ let sprites=[{p:monster,k:'monster',s:1.1},{p:exitPos,k:'exit',s:.85}];
+ if(!hasKey)drawers.filter(d=>!d.opened&&d.hasKey).forEach(p=>sprites.push({p,k:'drawer',s:.7}));
+ digits.filter(d=>!d.found).forEach(p=>sprites.push({p,k:'digit',s:.5}));
+ drawers.filter(d=>!d.opened&&!d.hasKey).slice(0,5).forEach(p=>sprites.push({p,k:'drawer',s:.6}));
+ hideSpots.forEach(p=>sprites.push({p,k:'hide',s:.65}));
+ sprites.sort((a,b)=>dist(b.p,player)-dist(a.p,player));for(let o of sprites)sprite(o.p,o.k,'',o.s);
+ // flashlight vignette
+ if(flashlight){let g=ctx.createRadialGradient(w/2,h*.53,Math.min(w,h)*.04,w/2,h*.53,Math.min(w,h)*.68);g.addColorStop(0,'#fff0');g.addColorStop(.65,'#0004');g.addColorStop(1,'#000d');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}else{ctx.fillStyle='#0008';ctx.fillRect(0,0,w,h)}
+ // hidden overlay
+ if(hidden){ctx.fillStyle='#000b';ctx.fillRect(0,0,w,h);ctx.fillStyle='#bbb';ctx.font=`${Math.max(16,w*.018)}px sans-serif`;ctx.textAlign='center';ctx.fillText('숨을 죽여라…',w/2,h*.75)}
+}
+window.addEventListener('keydown',e=>{audio();keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==='f'){if(hidden){hidden=false;sfx('hide')}else{let h=hideSpots.find(p=>dist(player,p)<1.25);if(h){hidden=true;hideSpot=h;sfx('hide')}}}if(e.key.toLowerCase()==='e')useNearby();if(e.key.toLowerCase()==='q')flashlight=!flashlight});
+window.addEventListener('keyup',e=>{keys[e.key]=false});
+let dragX=null;canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){dragX=e.clientX;canvas.setPointerCapture(e.pointerId)}});canvas.addEventListener('pointermove',e=>{if(dragX!==null&&e.pointerType==='touch'){let dx=e.clientX-dragX;player.a+=dx*.006;dragX=e.clientX}});canvas.addEventListener('pointerup',()=>dragX=null);
+document.querySelectorAll('[data-move]').forEach(b=>{let m=b.dataset.move;b.addEventListener('pointerdown',e=>{audio();touchMove[m]=true;b.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>touchMove[m]=false))});
+canvas.addEventListener('dblclick',useNearby);
+// clicking near interaction on mobile
+$('mobileUse').addEventListener('click',useNearby);
+// multiplayer: optional WebSocket relay; without a server, room codes are local-only
+function connectMultiplayer(){
+ const wsUrl=new URLSearchParams(location.search).get('ws');
+ if(!wsUrl){$('notice').textContent='방 '+roomCode+' · 실제 온라인 공유에는 별도 WebSocket 서버 주소가 필요해.';return}
+ try{socket=new WebSocket(wsUrl);socket.onopen=()=>socket.send(JSON.stringify({type:'join',room:roomCode,id:clientId}));socket.onmessage=e=>{try{let m=JSON.parse(e.data);if(m.type==='state'&&m.room===roomCode)remotePlayers=m.players||{}}catch(err){}};socket.onclose=()=>{};}catch(e){}
+}
+const clientId=Math.random().toString(36).slice(2,10);
+function sendPosition(){if(socket&&socket.readyState===1)socket.send(JSON.stringify({type:'position',room:roomCode,id:clientId,x:player.x,y:player.y,a:player.a,hidden}))}
+})();
+</script>
+</body></html>
